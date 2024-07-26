@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 namespace MyBookShop.Models
 {
+    // Category Model
     public class Category
     {
         [Key]
