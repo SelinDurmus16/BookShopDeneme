@@ -9,6 +9,27 @@ a.navbar-brand {
 
 
 
+.footer {
+    padding: 1px 1px; /* Padding'i daha da küçültün */
+    font-size: 1x; /* Font boyutunu daha da küçültün */
+    margin: 0 auto; /* Footer içeriðini ortalayýn */
+    border-width: 0px; /* Border geniþliðini küçültün */
+}
+
+.footer-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column; /* Elemanlarý dikey olarak yerleþtirin */
+}
+
+.footer i {
+    margin: 0 3px; /* Ýkonlar arasýnda biraz boþluk býrakýn */
+}
+
+
+
+
 .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
     color: #fff;
     background-color: #1b6ec2;
