@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-namespace MyBookShop.Models
+namespace BookShop.Models
 {
     // Category Model
     public class Category
@@ -12,8 +12,8 @@ namespace MyBookShop.Models
         [MaxLength(30)]
         public string Name { get; set; }
 
-		[DisplayName("Display Order")]
-        [Range(1,100, ErrorMessage ="Display Order must be between 1-100")] //validation for range 
-		public int DisplayOrder { get; set; }
+        [DisplayName("Display Order")]
+        [Range(1, 100, ErrorMessage = "Display Order must be between 1-100")] //validation for range 
+        public int DisplayOrder { get; set; }
     }
 }

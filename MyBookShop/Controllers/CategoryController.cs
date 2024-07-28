@@ -1,20 +1,23 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using MyBookShop.Data;
-using MyBookShop.Models;
+﻿using BookShop.DataAccess.Data;
+using BookShop.DataAccess.Repository;
+using BookShop.DataAccess.Repository.IRepository;
+using BookShop.Models;
+using Microsoft.AspNetCore.Mvc;
+
 
 namespace MyBookShop.Controllers
 {
     public class CategoryController : Controller
     {
-        private readonly ApplicationDbContext _db;
-        public CategoryController(ApplicationDbContext db)
+        private readonly IUnitOfWork _unitOfWork;
+        public CategoryController(IUnitOfWork unitOfWork)
         {
-            _db= db;
+            _unitOfWork = unitOfWork;
             
         }
         public IActionResult Index()
         {
-            List<Category> objCategoryList= _db.Categories.ToList();
+            List<Category> objCategoryList= _unitOfWork.Category.GetAll().ToList();
             return View(objCategoryList);
         }
 
@@ -34,8 +37,8 @@ namespace MyBookShop.Controllers
 
             if (ModelState.IsValid)
             {
-                _db.Categories.Add(obj);
-                _db.SaveChanges();
+                _unitOfWork.Category.Add(obj);
+                _unitOfWork.Save();
 				TempData["success"]= "Category Added Successfully"; //this is a key value pair, key is Success and value is Category Added Successfully
 				return RedirectToAction("Index");
 			}   
@@ -48,7 +51,7 @@ namespace MyBookShop.Controllers
 			{
 				return NotFound();
 			}
-			Category  categoryFromDb = _db.Categories.Find(id); //find the category by id, it finds it with primary key	
+			Category  categoryFromDb = _unitOfWork.Category.Get(u=>u.Id==id); //find the category by id, it finds it with primary key	
 			if(categoryFromDb == null)
 			{
 				return NotFound();
@@ -62,9 +65,9 @@ namespace MyBookShop.Controllers
 
 			if (ModelState.IsValid)
 			{
-				_db.Categories.Update(obj);
-				_db.SaveChanges();
-				TempData["success"] = "Category Updated Successfully";
+                _unitOfWork.Category.Update(obj);
+                _unitOfWork.Save();
+                TempData["success"] = "Category Updated Successfully";
 				return RedirectToAction("Index");
 			}
 			return View();
@@ -75,8 +78,8 @@ namespace MyBookShop.Controllers
 			{
 				return NotFound();
 			}
-			Category categoryFromDb = _db.Categories.Find(id); //find the category by id, it finds it with primary key	
-			if (categoryFromDb == null)
+			Category? categoryFromDb = _unitOfWork.Category.Get(u => u.Id == id); //find the category by id, it finds it with primary key	
+            if (categoryFromDb == null)
 			{
 				return NotFound();
 			}
@@ -84,15 +87,15 @@ namespace MyBookShop.Controllers
 		}
 		[HttpPost, ActionName("Delete")]
 		public IActionResult DeletePOST(int? id)
-		{
+        {
 
-			Category obj= _db.Categories.Find(id);
-			if (obj == null)
+			Category obj= _unitOfWork.Category.Get(u => u.Id == id);
+            if (obj == null)
 			{
 				return NotFound();
 			}
-			_db.Categories.Remove(obj);
-			_db.SaveChanges();
+            _unitOfWork.Category.Remove(obj);
+            _unitOfWork.Save();
 			TempData["success"] = "Category Deleted Successfully";
 			return RedirectToAction("Index");
 

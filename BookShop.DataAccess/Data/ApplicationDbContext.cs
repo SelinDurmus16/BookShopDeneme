@@ -1,8 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using MyBookShop.Models;
+
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
-namespace MyBookShop.Data
+using BookShop.Models;
+namespace BookShop.DataAccess.Data
 {
     public class ApplicationDbContext : DbContext 
     {
