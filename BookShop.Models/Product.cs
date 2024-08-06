@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BookShop.Models
 {
@@ -46,9 +47,16 @@ namespace BookShop.Models
         public double Price100 { get; set; }
 
 
+        public int CategoryId { get; set; }  //Category Id of the product
+        [ForeignKey("CategoryId")]
+        public Category Category { get; set; }  //Category of the product
+
+        public string ImageUrl { get; set; }  //Image URL of the product
 
 
 
+
+       
 
 
 

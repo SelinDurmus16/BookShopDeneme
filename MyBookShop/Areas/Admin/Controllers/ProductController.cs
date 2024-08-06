@@ -3,6 +3,8 @@ using BookShop.DataAccess.Repository;
 using BookShop.DataAccess.Repository.IRepository;
 using BookShop.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 
 namespace MyBookShop.Areas.Admin.Controllers
@@ -19,11 +21,19 @@ namespace MyBookShop.Areas.Admin.Controllers
         public IActionResult Index()
         {
             List<Product> objProductList = _unitOfWork.Product.GetAll().ToList();
+
             return View(objProductList);
         }
 
         public IActionResult Create()
         {
+            IEnumerable<SelectListItem> CategoryList = _unitOfWork.Category.GetAll().Select(u => new SelectListItem
+            {
+                Text = u.Name, //press F12 on the SelectListItem to see the properties and we see that
+                //we continue with name and text properties
+                Value = u.Id.ToString()
+            });
+            ViewBag.CategoryList = CategoryList;
 
             return View();
         }
