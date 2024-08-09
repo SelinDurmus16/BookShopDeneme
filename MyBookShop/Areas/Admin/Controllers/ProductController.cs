@@ -6,18 +6,21 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using BookShop.Models.ViewModels;
-
+using Microsoft.AspNetCore.Hosting; // Make sure this namespace is included
+using System.IO; // Ensure this namespace is included for Path and FileStream
 
 namespace MyBookShop.Areas.Admin.Controllers
 {
+
     [Area("Admin")]
     public class ProductController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
-        public ProductController(IUnitOfWork unitOfWork)
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        public ProductController(IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
         {
             _unitOfWork = unitOfWork;
-
+            _webHostEnvironment = webHostEnvironment;
         }
         public IActionResult Index()
         {
@@ -25,86 +28,95 @@ namespace MyBookShop.Areas.Admin.Controllers
 
             return View(objProductList);
         }
-
         public IActionResult Upsert(int? id)
         {
-             
-           
-            ProductVM productVM = new ProductVM()
+            ProductVM productVM = new()
             {
                 CategoryList = _unitOfWork.Category.GetAll().Select(u => new SelectListItem
                 {
-                    Text = u.Name, //press F12 on the SelectListItem to see the properties and we see that
-                                   //we continue with name and text properties
+                    Text = u.Name,
                     Value = u.Id.ToString()
                 }),
                 Product = new Product()
             };
-
-            if(id ==null || id== 0)
+            if (id == null || id == 0)
             {
+                //create
                 return View(productVM);
-
             }
             else
             {
-                //if id is present it means that we are updating
+                //update
                 productVM.Product = _unitOfWork.Product.Get(u => u.Id == id);
                 return View(productVM);
-
             }
-
 
         }
         [HttpPost]
-        public IActionResult Upsert(ProductVM obj, IFormFile? file )
+        public IActionResult Upsert(ProductVM productVM, IFormFile? file)
         {
-     
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors);
+                foreach (var error in errors)
+                {
+                    Console.WriteLine(error.ErrorMessage);  // This will print errors in the console, check here for issues.
+                }
+            }
 
             if (ModelState.IsValid)
             {
-                _unitOfWork.Product.Add(obj.Product );
+                string wwwRootPath = _webHostEnvironment.WebRootPath;
+                if (file != null)
+                {
+                    // Generate a unique filename and save the file
+                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                    string productPath = Path.Combine(wwwRootPath, @"images\product");
+
+                    using (var fileStream = new FileStream(Path.Combine(productPath, fileName), FileMode.Create))
+                    {
+                        file.CopyTo(fileStream);
+                    }
+
+                    // Set the ImageUrl property
+                    productVM.Product.ImageUrl = @"\images\product\" + fileName;
+                }
+
+                // Add or update the product in the database
+                if (productVM.Product.Id == 0)
+                {
+                    // Create new product
+                    _unitOfWork.Product.Add(productVM.Product);
+                }
+                else
+                {
+                    // Update existing product
+                    _unitOfWork.Product.Update(productVM.Product);
+                }
+
                 _unitOfWork.Save();
-                TempData["success"] = "Product Added Successfully"; //this is a key value pair, key is Success and value is Product Added Successfully
+                TempData["success"] = "Product created/updated successfully";
                 return RedirectToAction("Index");
             }
-            return View();
+            else
+            {
+                // If ModelState is not valid, repopulate the CategoryList for the view
+                productVM.CategoryList = _unitOfWork.Category.GetAll().Select(u => new SelectListItem
+                {
+                    Text = u.Name,
+                    Value = u.Id.ToString()
+                });
+                return View(productVM);
+            }
         }
 
-        //public IActionResult Edit(int? id)
-        //{
-        //    if (id == null || id == 0)
-        //    {
-        //        return NotFound();
-        //    }
-        //    Product productFromDb = _unitOfWork.Product.Get(u => u.Id == id); //find the Product by id, it finds it with primary key	
-        //    if (productFromDb == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    return View(productFromDb);
-        //}
-        //[HttpPost]
-        //public IActionResult Edit(Product obj)
-        //{
-
-
-        //    if (ModelState.IsValid)
-        //    {
-        //        _unitOfWork.Product.Update(obj);
-        //        _unitOfWork.Save();
-        //        TempData["success"] = "Product Updated Successfully";
-        //        return RedirectToAction("Index");
-        //    }
-        //    return View();
-        //}
         public IActionResult Delete(int? id)
         {
             if (id == null || id == 0)
             {
                 return NotFound();
             }
-            Product? productFromDb = _unitOfWork.Product.Get(u => u.Id == id); //find the Product by id, it finds it with primary key	
+            Product? productFromDb = _unitOfWork.Product.Get(u => u.Id == id);
             if (productFromDb == null)
             {
                 return NotFound();
@@ -114,19 +126,15 @@ namespace MyBookShop.Areas.Admin.Controllers
         [HttpPost, ActionName("Delete")]
         public IActionResult DeletePOST(int? id)
         {
-
-            Product obj = _unitOfWork.Product.Get(u => u.Id == id);
+            Product? obj = _unitOfWork.Product.Get(u => u.Id == id);
             if (obj == null)
             {
                 return NotFound();
             }
             _unitOfWork.Product.Remove(obj);
             _unitOfWork.Save();
-            TempData["success"] = "Product Deleted Successfully";
+            TempData["success"] = "Product deleted successfully";
             return RedirectToAction("Index");
-
-
         }
-
     }
 }
