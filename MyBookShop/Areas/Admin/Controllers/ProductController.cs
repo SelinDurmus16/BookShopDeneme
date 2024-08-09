@@ -5,6 +5,7 @@ using BookShop.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using BookShop.Models.ViewModels;
 
 
 namespace MyBookShop.Areas.Admin.Controllers
@@ -27,24 +28,30 @@ namespace MyBookShop.Areas.Admin.Controllers
 
         public IActionResult Create()
         {
-            IEnumerable<SelectListItem> CategoryList = _unitOfWork.Category.GetAll().Select(u => new SelectListItem
+             
+           
+            ProductVM productVM = new ProductVM()
             {
-                Text = u.Name, //press F12 on the SelectListItem to see the properties and we see that
-                //we continue with name and text properties
-                Value = u.Id.ToString()
-            });
-            ViewBag.CategoryList = CategoryList;
+                CategoryList = _unitOfWork.Category.GetAll().Select(u => new SelectListItem
+                {
+                    Text = u.Name, //press F12 on the SelectListItem to see the properties and we see that
+                                   //we continue with name and text properties
+                    Value = u.Id.ToString()
+                }),
+                Product = new Product()
+            };
 
-            return View();
+
+            return View(productVM);
         }
         [HttpPost]
-        public IActionResult Create(Product obj)
+        public IActionResult Create(ProductVM   obj)
         {
      
 
             if (ModelState.IsValid)
             {
-                _unitOfWork.Product.Add(obj);
+                _unitOfWork.Product.Add(obj.Product );
                 _unitOfWork.Save();
                 TempData["success"] = "Product Added Successfully"; //this is a key value pair, key is Success and value is Product Added Successfully
                 return RedirectToAction("Index");
