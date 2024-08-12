@@ -10,9 +10,9 @@ namespace BookShop.DataAccess.Repository.IRepository
     public interface IRepository<T> where T : class //we make it generic here
     {
         //T is a Category
-        IEnumerable<T> GetAll();
+        IEnumerable<T> GetAll(string? includeProperties = null);
        // T GetFirstOrDefault(); get the first or default but you can call it as only Get too
-        T Get(Expression<Func<T, bool>> filter);
+        T Get(Expression<Func<T, bool>> filter, string? includeProperties = null);
 
         void Add(T entity);
 
