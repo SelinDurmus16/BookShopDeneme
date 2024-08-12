@@ -7,7 +7,8 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using BookShop.Models.ViewModels;
 using Microsoft.AspNetCore.Hosting; // Make sure this namespace is included
-using System.IO; // Ensure this namespace is included for Path and FileStream
+using System.IO;
+using System.Drawing; // Ensure this namespace is included for Path and FileStream
 
 namespace MyBookShop.Areas.Admin.Controllers
 {
@@ -72,6 +73,17 @@ namespace MyBookShop.Areas.Admin.Controllers
                     // Generate a unique filename and save the file
                     string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
                     string productPath = Path.Combine(wwwRootPath, @"images\product");
+
+                    if (!string.IsNullOrEmpty(productVM.Product.ImageUrl))
+                    {
+                         // delete the old image
+                         var oldImagePath = Path.Combine(wwwRootPath, productVM.Product.ImageUrl.TrimStart('\\'));
+
+                        if (System.IO.File.Exists(oldImagePath))
+                            {
+                                System.IO.File.Delete(oldImagePath);
+                            }
+                    }
 
                     using (var fileStream = new FileStream(Path.Combine(productPath, fileName), FileMode.Create))
                     {
