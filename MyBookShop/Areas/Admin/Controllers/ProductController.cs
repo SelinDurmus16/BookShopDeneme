@@ -148,13 +148,15 @@ namespace MyBookShop.Areas.Admin.Controllers
             TempData["success"] = "Product deleted successfully";
             return RedirectToAction("Index");
         }
-        #region API CALLS   
+        #region API CALLS
+
         [HttpGet]
         public IActionResult GetAll()
         {
             List<Product> objProductList = _unitOfWork.Product.GetAll(includeProperties: "Category").ToList();
-            return Json(new { data = objProductList }); // This will return the data in JSON format
+            return Json(new { data = objProductList });
         }
+
         #endregion
     }
 }
