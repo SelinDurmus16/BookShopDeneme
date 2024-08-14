@@ -12,7 +12,6 @@ using System.Drawing; // Ensure this namespace is included for Path and FileStre
 
 namespace MyBookShop.Areas.Admin.Controllers
 {
-
     [Area("Admin")]
     public class ProductController : Controller
     {
@@ -56,63 +55,44 @@ namespace MyBookShop.Areas.Admin.Controllers
         [HttpPost]
         public IActionResult Upsert(ProductVM productVM, IFormFile? file)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values.SelectMany(v => v.Errors);
-                foreach (var error in errors)
-                {
-                    Console.WriteLine(error.ErrorMessage);  // This will print errors in the console, check here for issues.
-                }
-            }
-
             if (ModelState.IsValid)
             {
                 string wwwRootPath = _webHostEnvironment.WebRootPath;
                 if (file != null)
                 {
-                    // Generate a unique filename and save the file
                     string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
                     string productPath = Path.Combine(wwwRootPath, @"images\product");
-
                     if (!string.IsNullOrEmpty(productVM.Product.ImageUrl))
                     {
-                         // delete the old image
-                         var oldImagePath = Path.Combine(wwwRootPath, productVM.Product.ImageUrl.TrimStart('\\'));
-
+                        //delete the old image
+                        var oldImagePath =
+                            Path.Combine(wwwRootPath, productVM.Product.ImageUrl.TrimStart('\\'));
                         if (System.IO.File.Exists(oldImagePath))
-                            {
-                                System.IO.File.Delete(oldImagePath);
-                            }
+                        {
+                            System.IO.File.Delete(oldImagePath);
+                        }
                     }
-
                     using (var fileStream = new FileStream(Path.Combine(productPath, fileName), FileMode.Create))
                     {
                         file.CopyTo(fileStream);
                     }
-
-                    // Set the ImageUrl property
                     productVM.Product.ImageUrl = @"\images\product\" + fileName;
                 }
-
-                // Add or update the product in the database
                 if (productVM.Product.Id == 0)
                 {
-                    // Create new product
                     _unitOfWork.Product.Add(productVM.Product);
                 }
                 else
                 {
-                    // Update existing product
                     _unitOfWork.Product.Update(productVM.Product);
                 }
 
                 _unitOfWork.Save();
-                TempData["success"] = "Product created/updated successfully";
+                TempData["success"] = "Product created successfully";
                 return RedirectToAction("Index");
             }
             else
             {
-                // If ModelState is not valid, repopulate the CategoryList for the view
                 productVM.CategoryList = _unitOfWork.Category.GetAll().Select(u => new SelectListItem
                 {
                     Text = u.Name,
@@ -122,32 +102,7 @@ namespace MyBookShop.Areas.Admin.Controllers
             }
         }
 
-        public IActionResult Delete(int? id)
-        {
-            if (id == null || id == 0)
-            {
-                return NotFound();
-            }
-            Product? productFromDb = _unitOfWork.Product.Get(u => u.Id == id);
-            if (productFromDb == null)
-            {
-                return NotFound();
-            }
-            return View(productFromDb);
-        }
-        [HttpPost, ActionName("Delete")]
-        public IActionResult DeletePOST(int? id)
-        {
-            Product? obj = _unitOfWork.Product.Get(u => u.Id == id);
-            if (obj == null)
-            {
-                return NotFound();
-            }
-            _unitOfWork.Product.Remove(obj);
-            _unitOfWork.Save();
-            TempData["success"] = "Product deleted successfully";
-            return RedirectToAction("Index");
-        }
+
         #region API CALLS
 
         [HttpGet]
@@ -157,6 +112,32 @@ namespace MyBookShop.Areas.Admin.Controllers
             return Json(new { data = objProductList });
         }
 
+
+
+        public IActionResult Delete(int? id)
+        {
+            var productToBeDeleted = _unitOfWork.Product.Get(u => u.Id == id);
+            if (productToBeDeleted == null)
+            {
+                return Json(new { success = false, message = "Error while deleting" });
+            }
+
+            var oldImagePath =
+                           Path.Combine(_webHostEnvironment.WebRootPath,
+                           productToBeDeleted.ImageUrl.TrimStart('\\'));
+
+            if (System.IO.File.Exists(oldImagePath))
+            {
+                System.IO.File.Delete(oldImagePath);
+            }
+
+            _unitOfWork.Product.Remove(productToBeDeleted);
+            _unitOfWork.Save();
+
+            return Json(new { success = true, message = "Delete Successful" });
+        }
+
         #endregion
+        
     }
 }
